@@ -13,6 +13,7 @@
 ```bash
 pip install -r requirements.txt
 ```
+- Rename `.env_mock` to `.env` and place your token inside
 - Place your images in folder source/qr/anyothername
 - Edit __init__ function to your likings 
 - Then:
