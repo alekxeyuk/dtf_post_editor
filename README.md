@@ -1,5 +1,7 @@
 # dtf_post_editor
  Easy image based post editor for dtf.ru/vc/tj
+ 
+ [![Run on Repl.it](https://repl.it/badge/github/alekxeyuk/dtf_post_editor)](https://repl.it/github/alekxeyuk/dtf_post_editor)
 
 ## Dependencies
 - `Python 3.7` or higher
