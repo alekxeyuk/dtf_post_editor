@@ -213,13 +213,9 @@ class Post:
             print(response_type)
             if response_type == 'image':
                 self.add_media_block(response['result'][0], cover=cover, anchor=anchor)
-            elif response_type == 'link':
+            elif response_type in ('link', 'video'):
                 self.blocks.append(
-                    self.generate_block('link', response['result'][0], cover, anchor, True)
-                )
-            elif response_type == 'video':
-                self.blocks.append(
-                    self.generate_block('video', response['result'][0], cover, anchor, True)
+                    self.generate_block(response_type, response['result'][0], cover, anchor, True)
                 )
             else:
                 print(f'Not implemented type {response_type}')
