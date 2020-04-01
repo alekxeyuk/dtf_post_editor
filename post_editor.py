@@ -206,6 +206,30 @@ class Post:
             self.generate_block('list', {"items": items, 'type': _type}, cover, anchor)
         )
 
+    def add_warning_block(self, title: str, text: str, cover: bool = False, anchor: str = ''):
+        """
+            Нужно разрешение редакции на использование этого блока
+        """
+        self.blocks.append(
+            self.generate_block('warning', {"title": title, "text": text}, cover, anchor)
+        )
+
+    def add_special_button(self, url: str, text: str = 'Перейти к посту', text_color: str = "#000000", background_color: str = "#d9f5ff", cover: bool = False, anchor: str = ''):
+        """
+            Нужно разрешение редакции на использование этого блока
+        """
+        self.blocks.append(
+            self.generate_block('special_button', {"text": text, "textColor": text_color, "backgroundColor": background_color, "url": url}, cover, anchor)
+        )
+
+    def add_rawhtml_button(self, raw: str, cover: bool = False, anchor: str = ''):
+        """
+            Нужно разрешение редакции на использование этого блока
+        """
+        self.blocks.append(
+            self.generate_block('rawhtml', {"raw": raw}, cover, anchor)
+        )
+
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
         response = SESSION.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
         response_type = response['result'][0]['type']
@@ -237,9 +261,27 @@ class Post:
 
 
 if __name__ == "__main__":
-    TEST_POST = Post('Голосование', subsite_id=203796) # 64969 132168 203796
-    TEST_POST.add_quiz_block(['Игорь', 'Простагма'], title='ГОЛОСУЕМ?', is_public=True, cover=True)
+    TEST_POST = Post('Ломаем верстку', subsite_id=132168) # 64969 132168 203796
+    # TEST_POST.add_quiz_block(['Игорь', 'Простагма'], title='ГОЛОСУЕМ?', is_public=True, cover=True)
+    # TEST_POST.add_warning_block('Test', 'test', True)
+    TEST_POST.add_text_block("""<mark class="block-warning">
+    Test
+    </mark>""", True)
+    TEST_POST.add_header_block(f"""
+    <span class="block-warning__title thesis__submit ui-button ui-button--1">Внимание</span>
+    <span class="block-warning thesis__submit ui-button ui-button--1">{'h'*10000000}</span>
+    <h1 class="block-warning thesis__submit ui-button ui-button--1">В тексте нет сюжетных спойлеров, но описана завязка и то, как работает геймплей на протяжении всей кампании. Если вы всё равно опасаетесь, долистайте до самого конца, где описываются общие впечатления.</h1>
+    """, True)
+    TEST_POST.add_text_block("""<h1 class="block-warning thesis__submit ui-button ui-button--1">В тексте нет сюжетных спойлеров, но описана завязка и то, как работает геймплей на протяжении всей кампании. Если вы всё равно опасаетесь, долистайте до самого конца, где описываются общие впечатления.</h1>""", True)
+    TEST_POST.add_text_block("""<span class="thesis__submit ui-button ui-button--1">Внимание</span>""", True)
+    TEST_POST.add_text_block("""<button class="thesis__submit ui-button ui-button--1">Внимание</button>""", True)
+    TEST_POST.add_text_block("""<a class="thesis__submit ui-button ui-button--1" href="/writing?to=new">Ссылка на новую запись</a>""", True)
+    TEST_POST.add_text_block("""<a class="main_menu__write-button ui-button ui-button--12 ui-button--small lm-hidden l-mr-5">Внимание</a>""", True)
+    TEST_POST.add_text_block("""<span class="main_menu__write-button ui-button ui-button--12 ui-button--small lm-hidden l-mr-5">Внимание</span>""", True)
+    TEST_POST.add_text_block("""<span class="block-warning" style="font-size: 306px;">Внимание</span>""", True)
+    TEST_POST.add_text_block("""<span class="hljs-keyword">Внимание</span>""", True)
     TEST_POST.publish_post()
+    exit()
     # TEST_POST.extract_link('https://docs.python.org/3/_static/py.png', True)
     # TEST_POST.extract_link('https://docs.python.org/3/tutorial/index.html', True)
     # TEST_POST.extract_link('https://youtu.be/y6DbaBNyJzE', True)
@@ -252,7 +294,7 @@ if __name__ == "__main__":
     # TEST_POST.add_delimiter_block(cover=True)
     # TEST_POST.add_code_block('std::cout << "test";')
     # TEST_POST.add_list_block([1, 2, 3, 4, 5], 'UL')
-    TEST_POST.add_text_block('***text*** **text** *block* ==text== [text](http://ya.ru)', True)
+    # TEST_POST.add_text_block('***text*** **text** *block* ==text== [text](http://ya.ru)', True)
     TEST_POST.publish_post()
     exit()
     a = """Рэм,qr/rem
