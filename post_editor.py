@@ -222,12 +222,23 @@ class Post:
             self.generate_block('special_button', {"text": text, "textColor": text_color, "backgroundColor": background_color, "url": url}, cover, anchor)
         )
 
-    def add_rawhtml_button(self, raw: str, cover: bool = False, anchor: str = ''):
+    def add_rawhtml_block(self, raw: str, cover: bool = False, anchor: str = ''):
         """
             Нужно разрешение редакции на использование этого блока
         """
         self.blocks.append(
             self.generate_block('rawhtml', {"raw": raw}, cover, anchor)
+        )
+
+    def add_quote_block(self, text: str, subline1: str = '', subline2: str = '', _type: str = 'default', size: str = 'small', image: dict = None, cover: bool = False, anchor: str = ''):
+        """
+            - subline1 = Имя
+            - subline2 = Должность
+            - type = default / opinion
+            - size = small / big
+        """
+        self.blocks.append(
+            self.generate_block('quote', {"text": text, "subline1": subline1, "subline2": subline2, "type": _type, "text_size": size, "image": image}, cover, anchor)
         )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
@@ -261,7 +272,7 @@ class Post:
 
 
 if __name__ == "__main__":
-    TEST_POST = Post('Все html теги!', subsite_id=132168) # 64969 132168 203796
+    TEST_POST = Post('Цитата тест!', subsite_id=132168) # 64969 132168 203796
     # TEST_POST.extract_link('https://docs.python.org/3/_static/py.png', True)
     # TEST_POST.extract_link('https://docs.python.org/3/tutorial/index.html', True)
     # TEST_POST.extract_link('https://youtu.be/y6DbaBNyJzE', True)
@@ -276,6 +287,9 @@ if __name__ == "__main__":
     # TEST_POST.add_list_block([1, 2, 3, 4, 5], 'UL')
     # TEST_POST.add_text_block('***text*** **text** *block* ==text== [text](http://ya.ru)', True)
     # TEST_POST.add_text_block(open('test.html', 'r', encoding='utf-8').read(), False)
+    # img = Post.upload_from_file('cover.jpg')
+    # TEST_POST.add_quote_block('Test цитаты', 'Имя', 'Должность', 'default', 'big', img, True)
+    
     TEST_POST.publish_post()
     exit()
     a = """Рэм,qr/rem
