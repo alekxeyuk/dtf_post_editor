@@ -7,6 +7,7 @@ from random import choice
 import pyqrcode
 import requests
 from PIL import Image
+from format_helper import form_str
 
 SESSION = requests.Session()
 with open('.env', 'r') as env_file:
@@ -43,13 +44,13 @@ class Post:
             return response['result'][0]
 
     @staticmethod
-    def alternative_upload_from_file(file_name: str, extension: str = ''):
+    def alternative_upload_from_file(file_name: str, extension: str = '', file_type: str = ''):
         """
             Загрузить файл с диска, путь относительный
         """
         if SESSION.headers.get('osnova-remember', False) and SESSION.headers.get('osnova-session', False):
             with open(file_name, 'rb') as i_f:
-                response = SESSION.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': i_f}).json()
+                response = SESSION.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
                 return response['result'][0]
         else:
             print('Add osnova-remember and osnova-session cookies to .env')
@@ -170,6 +171,11 @@ class Post:
             self.generate_block('media', {'items': [{"title": title, "author": author, "image": item}], 'with_background': background, 'with_border': border}, cover, anchor)
         )
 
+    def add_gallery_block(self, images: list, cover: bool = False, anchor: str = ''):
+        self.blocks.append(
+            self.generate_block('media', {'items': [{"title": '', "author": '', "image": image} for image in images], 'with_background': False, 'with_border': False}, cover, anchor)
+        )
+
     def add_number_block(self, number: str = '', title: str = '', cover: bool = False, anchor: str = ''):
         """
             - :str: Число
@@ -241,6 +247,16 @@ class Post:
             self.generate_block('quote', {"text": text, "subline1": subline1, "subline2": subline2, "type": _type, "text_size": size, "image": image}, cover, anchor)
         )
 
+    def add_incut_block(self, text: str, _type: str = 'centered', size: str = 'big', cover: bool = False, anchor: str = ''):
+        """
+            - text = not/formated text
+            - type = left / centered
+            - size = small / big
+        """
+        self.blocks.append(
+            self.generate_block('incut', {"text": text, "type": _type, "text_size": size}, cover, anchor)
+        )
+
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
         response = SESSION.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
         response_type = response['result'][0]['type']
@@ -272,55 +288,12 @@ class Post:
 
 
 if __name__ == "__main__":
-    TEST_POST = Post('Цитата тест!', subsite_id=132168) # 64969 132168 203796
-    # TEST_POST.extract_link('https://docs.python.org/3/_static/py.png', True)
-    # TEST_POST.extract_link('https://docs.python.org/3/tutorial/index.html', True)
-    # TEST_POST.extract_link('https://youtu.be/y6DbaBNyJzE', True)
-    # TEST_POST.extract_link('https://media.giphy.com/media/xULW8OofuT5CAhTVWU/giphy.gif', True)
-    # TEST_POST.extract_link('https://www.verdict.co.uk/wp-content/uploads/2017/09/giphy-downsized-large.gif', True)
-    # TEST_POST.extract_link('https://leonardo.osnova.io/744f8fcb-2542-bf14-dd17-91eff63950a1/', True)
-    # TEST_POST.add_number_block('400', 'рублей', True)
-    # TEST_POST.add_quiz_block(['Норм', 'Плохо'], title='Как дела?', is_public=True, cover=True)
-    # TEST_POST.add_audio_block(Post.alternative_upload_from_file('OxT - GO CRY GO.mp3', '/audio'), Post.upload_from_file('cover.jpg'), 'OxT - GO CRY GO')
-    # TEST_POST.add_delimiter_block(cover=True)
-    # TEST_POST.add_code_block('std::cout << "test";')
-    # TEST_POST.add_list_block([1, 2, 3, 4, 5], 'UL')
-    # TEST_POST.add_text_block('***text*** **text** *block* ==text== [text](http://ya.ru)', True)
-    # TEST_POST.add_text_block(open('test.html', 'r', encoding='utf-8').read(), False)
-    # img = Post.upload_from_file('cover.jpg')
-    # TEST_POST.add_quote_block('Test цитаты', 'Имя', 'Должность', 'default', 'big', img, True)
-    
+    TEST_POST = Post('Дрочем', subsite_id=203796) # 64969 132168 203796
+    TEST_POST.add_media_block(Post.upload_from_file('621118.jpg'), 'Re: Zero', 'Felix', background=False, cover=True) # Картинка для вывода в ленту
+    TEST_POST.add_text_block('3D трапы 🔥', cover=True) # Просто текст
+    TEST_POST.add_header_block(Post.generate_anchor_link('Комментарии', 'qrfast'), cover=False) # Заголовок 2 размера, с ссылкой на якорь
+    Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
+    TEST_POST.add_media_list(Post.upload_from_folder('qr'))
+    TEST_POST.add_text_block('Спасибо за внимание, данный пост создан в моем post_editor v0.9a') # Просто текст
+    TEST_POST.add_text_block('#qrfast', anchor='qrfast') # хэштег с якорем
     TEST_POST.publish_post()
-    exit()
-    a = """Рэм,qr/rem
-        Рам,qr/ram
-        Рам и Рэм,qr/RamRem
-        Анастасия Хошин,qr/Anastasia
-        Беатрис,qr/beatrice
-        Терезия ван Астрея,qr/Thearesia
-        Круш Карштен,qr/crush
-        Эльза Гранхирт,qr/Elsa
-        Эмилия,qr/emilia
-        Феликс Аргайл,qr/felix
-        Фелт,qr/Felt
-        Пёрлбатон,qr/Hetaro
-        Юлий Юклий,qr/Julius
-        Присцилла Бариэль,qr/Priscilla
-        Райнхард ван Астрея,qr/Reinhard
-        Росвелл Л. Матерс,qr/rozvall
-        Групповуха,qr/combo
-        Рандом,qr/random"""
-    test_post = Post(title='Re: Zero Infinity', subsite_id=132168) # Инициализация поста с названием и ID подсайта
-    test_post.add_media_block(Post.upload_from_file('cover.jpg'), 'Re: Zero Infinity', 'QooApp', background=False, cover=True) # Картинка для вывода в ленту
-    test_post.add_text_block('Наслаждаемся артами из игры по Re: Zero 🔥', cover=True) # Просто текст
-    test_post.add_header_block(Post.generate_anchor_link('Комментарии', 'qrfast'), cover=False) # Заголовок 2 размера, с ссылкой на якорь
-    #Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
-    a = dict(map(lambda x: x.strip().split(','), a.split('\n')))
-    for h_name, f_upl in a.items():
-        test_post.add_header_block(Post.generate_anchor_link(h_name, f_upl.replace('/', '')))
-    for h_name, f_upl in a.items():
-        test_post.add_header_block(h_name, anchor=f_upl.replace('/', ''))
-        test_post.add_media_list(Post.upload_from_folder(f_upl))
-    test_post.add_text_block('Спасибо за внимание, данный пост создан в моем post_editor v0.2a') # Просто текст
-    test_post.add_text_block('#qrfast', anchor='qrfast') # хэштег с якорем
-    test_post.publish_post()
