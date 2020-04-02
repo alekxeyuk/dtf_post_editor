@@ -8,6 +8,7 @@ import pyqrcode
 import requests
 from PIL import Image
 from format_helper import form_str
+from telega_post import parse_and_post_to_telegraph
 
 SESSION = requests.Session()
 with open('.env', 'r') as env_file:
@@ -288,12 +289,10 @@ class Post:
 
 
 if __name__ == "__main__":
-    TEST_POST = Post('Дрочем', subsite_id=203796) # 64969 132168 203796
+    TEST_POST = Post('Хм?', subsite_id=132168) # 64969 132168 203796
     TEST_POST.add_media_block(Post.upload_from_file('621118.jpg'), 'Re: Zero', 'Felix', background=False, cover=True) # Картинка для вывода в ленту
-    TEST_POST.add_text_block('3D трапы 🔥', cover=True) # Просто текст
-    TEST_POST.add_header_block(Post.generate_anchor_link('Комментарии', 'qrfast'), cover=False) # Заголовок 2 размера, с ссылкой на якорь
     Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
     TEST_POST.add_media_list(Post.upload_from_folder('qr'))
-    TEST_POST.add_text_block('Спасибо за внимание, данный пост создан в моем post_editor v0.9a') # Просто текст
-    TEST_POST.add_text_block('#qrfast', anchor='qrfast') # хэштег с якорем
+    link_to_telegraph = parse_and_post_to_telegraph(TEST_POST.title, TEST_POST.blocks, {'https':'socks4://109.202.17.4:61210'})
+    TEST_POST.add_text_block(form_str(f"[Telegraph]({link_to_telegraph})"))
     TEST_POST.publish_post()
