@@ -294,5 +294,5 @@ if __name__ == "__main__":
     Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
     TEST_POST.add_media_list(Post.upload_from_folder('qr'))
     link_to_telegraph = parse_and_post_to_telegraph(TEST_POST.title, TEST_POST.blocks, {'https':'socks4://109.202.17.4:61210'})
-    TEST_POST.add_text_block(form_str(f"[Telegraph]({link_to_telegraph})"))
+    TEST_POST.extract_link(link_to_telegraph, True)
     TEST_POST.publish_post()
