@@ -47,9 +47,11 @@ class Post:
     @staticmethod
     def alternative_upload_from_file(file_name: str, extension: str = '', file_type: str = ''):
         """
-            Загрузить файл с диска, путь относительный
+            - Загрузить файл с диска, путь относительный
+            - extension ?= /audio
+            - file_type ?= video/mp4
         """
-        if SESSION.headers.get('osnova-remember', False) and SESSION.headers.get('osnova-session', False):
+        if SESSION.headers.get('osnova-remember', False) and SESSION.headers.get('osnova-session', False) and SESSION.headers.get('osnova-remember') != 'replace_me':
             with open(file_name, 'rb') as i_f:
                 response = SESSION.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
                 return response['result'][0]
@@ -289,10 +291,20 @@ class Post:
 
 
 if __name__ == "__main__":
-    TEST_POST = Post('Хм?', subsite_id=132168) # 64969 132168 203796
-    TEST_POST.add_media_block(Post.upload_from_file('621118.jpg'), 'Re: Zero', 'Felix', background=False, cover=True) # Картинка для вывода в ленту
-    Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
-    TEST_POST.add_media_list(Post.upload_from_folder('qr'))
-    link_to_telegraph = parse_and_post_to_telegraph(TEST_POST.title, TEST_POST.blocks, {'https':'socks4://109.202.17.4:61210'})
-    TEST_POST.extract_link(link_to_telegraph, True)
+    TEST_POST = Post('последний пост, я ухожу', subsite_id=132168) # 64969 132168 203796
+    # TEST_POST.add_media_block(Post.upload_from_file('621118.jpg'), 'Re: Zero', 'Felix', background=False, cover=True) # Картинка для вывода в ленту
+    # Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
+    # TEST_POST.add_media_list(Post.upload_from_folder('qr'))
+    # link_to_telegraph = parse_and_post_to_telegraph(TEST_POST.title, TEST_POST.blocks, {'https':'socks4://109.202.17.4:61210'})
+    # TEST_POST.extract_link(link_to_telegraph, True)
+    TEST_POST.add_text_block(cover=True)
+    # TEST_POST.add_text_block(f"""<span style="color: red; font-size: 2em">TEST</span>""", False)
+    # TEST_POST.add_text_block(f"""<a style="color: red; font-size: 2em">TEST</a>""", False)
+    # TEST_POST.add_text_block(f"""<p style="color: red; font-size: 2em">TEST</p>""", False)
+    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
+    # TEST_POST.add_text_block(f"""< style="color: red; font-size: 2em">TEST</h1>""", False)
+    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
+    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
+    # TEST_POST.add_text_block()
+    TEST_POST.add_list_block([1, 2, '<span class="comments_updates__counter">Внимание</span>', 3, 4])
     TEST_POST.publish_post()
