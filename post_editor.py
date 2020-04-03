@@ -7,16 +7,6 @@ from random import choice
 import pyqrcode
 import requests
 from PIL import Image
-from format_helper import form_str
-from telega_post import parse_and_post_to_telegraph
-
-SESSION = requests.Session()
-with open('.env', 'r') as env_file:
-    SESSION.headers = json.load(env_file)
-    SESSION.headers.update({"x-this-is-csrf": "THIS IS SPARTA!"})
-
-def gen_random_line(length=8, chars=string.ascii_letters + string.digits):
-    return ''.join([choice(chars) for i in range(length)])
 
 class Post:
     """
@@ -34,46 +24,55 @@ class Post:
         self.blocks = []
         self.is_published = True
         self.subsite_id = subsite_id
+        self.session = requests.Session()
+        with open('.env', 'r') as env_file:
+            self.session.headers = json.load(env_file)
+            self.session.headers.update({"x-this-is-csrf": "THIS IS SPARTA!"})
 
     @staticmethod
-    def upload_from_file(file_name: str):
+    def gen_random_line(length=8, chars=string.ascii_letters + string.digits):
+        return ''.join([choice(chars) for i in range(length)])
+
+    # @staticmethod
+    def upload_from_file(self, file_name: str):
         """
             Загрузить файл с диска, путь относительный
         """
         with open(file_name, 'rb') as i_f:
-            response = SESSION.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_0': i_f}).json()
+            response = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_0': i_f}).json()
             return response['result'][0]
 
-    @staticmethod
-    def alternative_upload_from_file(file_name: str, extension: str = '', file_type: str = ''):
+    # @staticmethod
+    def alternative_upload_from_file(self, file_name: str, extension: str = '', file_type: str = ''):
         """
             - Загрузить файл с диска, путь относительный
             - extension ?= /audio
             - file_type ?= video/mp4
         """
-        if SESSION.headers.get('osnova-remember', False) and SESSION.headers.get('osnova-session', False) and SESSION.headers.get('osnova-remember') != 'replace_me':
+        if self.session.headers.get('osnova-remember', False) and self.session.headers.get('osnova-remember') != 'replace_me':
             with open(file_name, 'rb') as i_f:
-                response = SESSION.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
+                response = self.session.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
                 return response['result'][0]
         else:
             print('Add osnova-remember and osnova-session cookies to .env')
+            return {}
 
-    @staticmethod
-    def upload_from_folder(folder_name: str):
+    # @staticmethod
+    def upload_from_folder(self, folder_name: str):
         """
             Загрузить все файлы из папки, путь относительный
         """
         upl_imgs = list()
         my_list = list()
-        n = 10
+        limit = 10
         for extension in ('*.jpeg', '*.jpg', '*.png'):
             my_list.extend(glob.iglob(f"{folder_name}/{extension}"))
 
-        my_list_chunks = [my_list[i * n:(i + 1) * n] for i in range((len(my_list) + n - 1) // n)]
+        my_list_chunks = [my_list[i * limit:(i + 1) * limit] for i in range((len(my_list) + limit - 1) // limit)]
 
         for _, img_slice in enumerate(my_list_chunks):
             print(f'{_}/{len(my_list_chunks)}')
-            images = SESSION.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_{i}': open(x, 'rb') for i, x in enumerate(img_slice)}).json()
+            images = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
             upl_imgs.extend(images['result'])
 
         return zip(map(lambda x: x.split('.')[0].split('\\')[-1], my_list), upl_imgs)
@@ -147,8 +146,8 @@ class Post:
             :list: Список изображений
         """
         for file_name, item in items:
-            n, m = sorted([item['data']['width'], item['data']['height']])
-            if m % n > 100:
+            width, height = sorted([item['data']['width'], item['data']['height']])
+            if height % width > 100:
                 back = not item['data']['width'] > item['data']['height']
             else:
                 back = item['data']['width'] < 680 or item['data']['height'] > 1000
@@ -197,7 +196,7 @@ class Post:
 
     def add_audio_block(self, audio_dict: dict, image_dict: dict = None, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
         self.blocks.append(
-            self.generate_block('audio', {"title": title, "hash": _hash or gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor)
+            self.generate_block('audio', {"title": title, "hash": _hash or self.gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor)
         )
 
     def add_delimiter_block(self, _type: str = 'default', cover: bool = False, anchor: str = ''):
@@ -261,7 +260,7 @@ class Post:
         )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
-        response = SESSION.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
+        response = self.session.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
         response_type = response['result'][0]['type']
         if response_type != 'error':
             print(response_type)
@@ -277,7 +276,7 @@ class Post:
             print(f'Error extracting {url}')
 
     def publish_post(self):
-        response = SESSION.post('https://api.dtf.ru/v1.8/entry/create', data={
+        response = self.session.post('https://api.dtf.ru/v1.8/entry/create', data={
             "user_id": self.user_id,
             "title": self.title,
             "entry": json.dumps({
@@ -288,23 +287,3 @@ class Post:
             "subsite_id": self.subsite_id
         })
         print(response.text)
-
-
-if __name__ == "__main__":
-    TEST_POST = Post('последний пост, я ухожу', subsite_id=132168) # 64969 132168 203796
-    # TEST_POST.add_media_block(Post.upload_from_file('621118.jpg'), 'Re: Zero', 'Felix', background=False, cover=True) # Картинка для вывода в ленту
-    # Post.generate_qr_codes(Post.upload_from_folder('source'), save_path='qr') # генерируем qr коды для изображений из папки source в папку qr
-    # TEST_POST.add_media_list(Post.upload_from_folder('qr'))
-    # link_to_telegraph = parse_and_post_to_telegraph(TEST_POST.title, TEST_POST.blocks, {'https':'socks4://109.202.17.4:61210'})
-    # TEST_POST.extract_link(link_to_telegraph, True)
-    TEST_POST.add_text_block(cover=True)
-    # TEST_POST.add_text_block(f"""<span style="color: red; font-size: 2em">TEST</span>""", False)
-    # TEST_POST.add_text_block(f"""<a style="color: red; font-size: 2em">TEST</a>""", False)
-    # TEST_POST.add_text_block(f"""<p style="color: red; font-size: 2em">TEST</p>""", False)
-    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
-    # TEST_POST.add_text_block(f"""< style="color: red; font-size: 2em">TEST</h1>""", False)
-    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
-    # TEST_POST.add_text_block(f"""<h1 style="color: red; font-size: 2em">TEST</h1>""", False)
-    # TEST_POST.add_text_block()
-    TEST_POST.add_list_block([1, 2, '<span class="comments_updates__counter">Внимание</span>', 3, 4])
-    TEST_POST.publish_post()
