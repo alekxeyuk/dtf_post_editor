@@ -15,6 +15,8 @@ def parse_dtf_blocks(blocks: list) -> list:
                 for item in block['data']['items']:
                     image = item.get('image', None)
                     if image:
+                        if isinstance(image, tuple):
+                            image = image[1]
                         parsed_blocks.append(block_create(image['data']['uuid']))
     return parsed_blocks
 

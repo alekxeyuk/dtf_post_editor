@@ -175,7 +175,7 @@ class Post:
 
     def add_gallery_block(self, images: list, cover: bool = False, anchor: str = ''):
         self.blocks.append(
-            self.generate_block('media', {'items': [{"title": '', "author": '', "image": image} for image in images], 'with_background': False, 'with_border': False}, cover, anchor)
+            self.generate_block('media', {'items': [{"title": '', "author": '', "image": image[1] if isinstance(image, tuple) else image} for image in images], 'with_background': False, 'with_border': False}, cover, anchor)
         )
 
     def add_number_block(self, number: str = '', title: str = '', cover: bool = False, anchor: str = ''):
@@ -190,6 +190,11 @@ class Post:
         )
 
     def add_quiz_block(self, items: list, title: str = '', is_public: bool = False, cover: bool = False, anchor: str = ''):
+        """
+        - Варианты ответа
+        - Название
+        - Публичность опроса
+        """
         self.blocks.append(
             self.generate_block('quiz', {"hash": '', "title": title, "new_items": items, "is_public": is_public, 'is_just_created': True}, cover, anchor)
         )

@@ -11,7 +11,7 @@ func_dict = {
     'url': lambda x: ("<a href='{1}' target='_blank'>{0}</a>".format(*x.split('](')), f"[{x})"),
 }
 
-def format_string(test_str):
+def format_string(test_str: str) -> str:
     matches = list(p.finditer(test_str))
     for match in matches:
         for key, item in match.groupdict().items():
@@ -20,7 +20,7 @@ def format_string(test_str):
                 return format_string(test_str.replace(y, x))
     return test_str
 
-def form_str(string):
+def form_str(string: str) -> str:
     """
     Форматирование строки по markdown
         - Строка с тегами разделенными пробелами
