@@ -139,19 +139,25 @@ class Post:
             self.generate_block('header', {'text': text, 'style': style}, cover, anchor)
         )
 
-    def add_media_list(self, items: list):
+    def add_media_list(self, items: list, cover_count: int = 0, auto_back: bool = True, imp_back: bool = False):
         """
-            Добавляет изображения как отдельные блоки, автоцентровка если высота > ширины
-
-            :list: Список изображений
+        Добавляет изображения как отдельные блоки, автоцентровка если высота > ширины
+            - :list: Список изображений
+            - :int:  Количество блоков для вывода в ленту
+            - :bool: Автоцентровка
+            - :bool: Принудительное не/центрирование
         """
+        counter = 0
         for file_name, item in items:
-            width, height = sorted([item['data']['width'], item['data']['height']])
-            if height % width > 100:
-                back = not item['data']['width'] > item['data']['height']
-            else:
-                back = item['data']['width'] < 680 or item['data']['height'] > 1000
-            self.add_media_block(item, background=back, anchor=file_name)
+            if auto_back:
+                width, height = sorted([item['data']['width'], item['data']['height']])
+                if height % width > 100:
+                    imp_back = not item['data']['width'] > item['data']['height']
+                else:
+                    imp_back = item['data']['width'] < 680 or item['data']['height'] > 1000
+            self.add_media_block(item, background=imp_back, anchor=file_name, cover=counter < cover_count)
+            counter += 1
+
 
     def add_media_block(self, item: dict, title: str = '', author: str = '', background: bool = True, border: bool = False, cover: bool = False, anchor: str = ''):
         """
