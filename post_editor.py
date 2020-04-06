@@ -110,7 +110,7 @@ class Post:
             url.png(buffer, scale=6)
             with Image.open(buffer) as buffer_qr_img:
                 img.paste(buffer_qr_img, (0, 0))
-            img.save(f"{save_path}/{image['data']['uuid']}.png")
+            img.save(f"{save_path}/{image['data']['uuid']}-png.png")
 
     def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = ''):
         """
@@ -139,7 +139,7 @@ class Post:
             self.generate_block('header', {'text': text, 'style': style}, cover, anchor)
         )
 
-    def add_media_list(self, items: list, cover_count: int = 0, auto_back: bool = True, imp_back: bool = False):
+    def add_media_list(self, items: list, cover_count: int = 0, auto_back: bool = True, imp_back: bool = False, add_anchor: bool = True):
         """
         Добавляет изображения как отдельные блоки, автоцентровка если высота > ширины
             - :list: Список изображений
@@ -155,7 +155,7 @@ class Post:
                     imp_back = not item['data']['width'] > item['data']['height']
                 else:
                     imp_back = item['data']['width'] < 680 or item['data']['height'] > 1000
-            self.add_media_block(item, background=imp_back, anchor=file_name, cover=counter < cover_count)
+            self.add_media_block(item, background=imp_back, anchor=file_name * add_anchor, cover=counter < cover_count)
             counter += 1
 
 
