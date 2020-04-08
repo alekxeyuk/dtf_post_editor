@@ -94,11 +94,11 @@ class Post:
         }
 
     @staticmethod
-    def generate_anchor_link(link_text: str, link_anchor: str) -> str:
+    def generate_link(link_text: str, link_url: str) -> str:
         """
-            Генерирует ссылку на якорь(anchor)
+            Генерирует ссылку
         """
-        return f'''<a href="#{link_anchor}">{link_text}</a>'''
+        return f'''<a href="{link_url}">{link_text}</a>'''
 
     @staticmethod
     def generate_qr_codes(items: list, save_path: str = 'qr'):
