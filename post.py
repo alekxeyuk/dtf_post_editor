@@ -8,7 +8,7 @@ if __name__ == "__main__":
     TEST_POST.add_text_block(form_str("**test** *test* ==Hello== [Test](http://ya.ru)"))
 
     TEST_POST.add_header_block('Заголовок Обычный', 4)
-    TEST_POST.add_header_block(Post.generate_anchor_link('Заголовок Ссылка', 'qrfast'), 4)
+    TEST_POST.add_header_block(Post.generate_link('Заголовок Ссылка', '#qrfast'), 4)
     TEST_POST.add_header_block(form_str("**Заголовок** *МаркДаун* ==Hello== [Test](http://ya.ru)"), 2)
 
     TEST_POST.add_media_block(TEST_POST.upload_from_file('anime.png'), 'Название', 'Автор', False, False, True)

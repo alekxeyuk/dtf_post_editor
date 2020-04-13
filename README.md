@@ -3,6 +3,8 @@
  
  [![Run on Repl.it](https://repl.it/badge/github/alekxeyuk/dtf_post_editor)](https://repl.it/github/alekxeyuk/dtf_post_editor)
 
+ [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alekxeyuk/dtf_post_editor) 
+
 ## Dependencies
 - `Python 3.7` or higher
 - `requests` [requests](https://github.com/kennethreitz/requests)
