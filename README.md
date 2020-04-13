@@ -10,6 +10,8 @@
 - `requests` [requests](https://github.com/kennethreitz/requests)
 - `pillow` [pillow](https://github.com/python-pillow/Pillow)
 - `pyqrcode` [pyqrcode](https://github.com/mnooner256/pyqrcode)
+- `telegraph` [telegraph](https://github.com/python273/telegraph)
+- `retry-decorator` [retry-decorator](https://github.com/pnpnpn/retry-decorator)
 
 ## Install
 - Clone repository
