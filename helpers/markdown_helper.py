@@ -30,4 +30,4 @@ def form_str(string: str) -> str:
         - marker wrap
         - a tag
     """
-    return ' '.join(map(format_string, string.split(' ')))
+    return format_string(string.replace(' ', '|')).replace('|', ' ')
