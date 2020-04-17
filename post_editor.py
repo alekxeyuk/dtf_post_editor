@@ -66,7 +66,7 @@ class Post:
         upl_imgs = list()
         my_list = list()
         limit = 10
-        for extension in ('*.jpeg', '*.jpg', '*.png'):
+        for extension in ('*.jfif', '*.jpeg', '*.jpg', '*.png'):
             my_list.extend(glob.iglob(f"{folder_path}/{extension}", recursive=recursive))
 
         my_list_chunks = [my_list[i * limit:(i + 1) * limit] for i in range((len(my_list) + limit - 1) // limit)]
