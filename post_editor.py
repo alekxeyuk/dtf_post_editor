@@ -104,6 +104,9 @@ class Post:
     @staticmethod
     def generate_qr_codes(items: list, save_path: str = 'qr'):
         for _, image in items:
+            if image['data'].get('uuid', None) is None:
+                print(image)
+                continue
             print(image['data']['uuid'])
             img = Image.new('L', (image['data']['width'], image['data']['height']), 255)
             url = pyqrcode.create(image['data']['uuid'], version=5)
