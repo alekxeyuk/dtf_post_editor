@@ -1,6 +1,7 @@
 import glob
 import json
 import string
+import time
 from io import BytesIO
 from random import choice
 
@@ -206,7 +207,7 @@ class Post:
         - Публичность опроса
         """
         self.blocks.append(
-            self.generate_block('quiz', {"hash": '', "title": title, "new_items": items, "is_public": is_public, 'is_just_created': True}, cover, anchor)
+            self.generate_block('quiz', {"uid": self.gen_random_line(29), "hash": self.gen_random_line(16), "title": title, "items": {f'a{int(time.time())}{x}': item for x, item in enumerate(items)}, "is_public": is_public, 'is_just_created': True}, cover, anchor)
         )
 
     def add_audio_block(self, audio_dict: dict, image_dict: dict = None, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
