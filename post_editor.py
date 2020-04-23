@@ -154,6 +154,9 @@ class Post:
         """
         counter = 0
         for file_name, item in items:
+            if item.get('type') == 'error':
+                print(file_name, 'broken image')
+                continue
             if auto_back:
                 width, height = sorted([item['data']['width'], item['data']['height']])
                 if height % width > 100:
