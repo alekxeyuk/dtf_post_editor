@@ -108,8 +108,7 @@ class Post:
         """
         return f'''<a href="{link_url}">{link_text}</a>'''
 
-    @staticmethod
-    def generate_qr_codes(items: list, save_path: str = 'qr'):
+    def generate_qr_codes(self, items: list, save_path: str = 'qr', save_to_db: bool = True):
         for _, image in items:
             if image['data'].get('uuid', None) is None:
                 print(image)
@@ -127,6 +126,14 @@ class Post:
             background.paste(qr_img, (0, 0))
             ImageDraw.Draw(background).text((4, 0), 'prostagma? qr-nsfw v2', (0, 0, 0))
             background.save(f"{save_path}/{image['data']['uuid']}-png.png")
+            if save_to_db:
+                qr_image = self.upload_from_file(f"{save_path}/{image['data']['uuid']}-png.png")
+                print(self.session.post("https://python-flask.alekxuk.now.sh/v1/qrcodes/insert", json={
+                    'uuid': image['data']['uuid'],
+                    'qr_uuid': qr_image['data']['uuid'],
+                    'qr_data': f"{image['data']['uuid']}|{image.get('data').get('type')}",
+                    'entry_data': {'type': image.get('type'), 'file_type': image.get('data').get('type')}
+                }).json())
 
     def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = ''):
         """
