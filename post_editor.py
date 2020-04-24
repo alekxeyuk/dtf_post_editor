@@ -115,7 +115,7 @@ class Post:
                 print(image)
                 continue
             print(image['data']['uuid'])
-            img = Image.new('RGBA', (image['data']['width'], image['data']['height']), (0, 0, 0, 0))
+            background = Image.new('RGBA', (image['data']['width'], image['data']['height']), (0, 0, 0, 0))
             qr = qrcode.QRCode(
                 error_correction=qrcode.constants.ERROR_CORRECT_L,
                 box_size=8,
@@ -124,12 +124,9 @@ class Post:
             qr.add_data(image['data']['uuid'])
             qr.make(fit=True)
             qr_img = qr.make_image(fill_color="black", back_color="white")
-            buffer = BytesIO()
-            qr_img.save(buffer)
-            with Image.open(buffer) as buffer_qr_img:
-                img.paste(buffer_qr_img, (0, 0))
-                ImageDraw.Draw(img).text((0, 0), 'prostagma? qr-nsfw v2', (0, 0, 0))
-            img.save(f"{save_path}/{image['data']['uuid']}-png.png")
+            background.paste(qr_img, (0, 0))
+            ImageDraw.Draw(background).text((4, 0), 'prostagma? qr-nsfw v2', (0, 0, 0))
+            background.save(f"{save_path}/{image['data']['uuid']}-png.png")
 
     def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = ''):
         """
