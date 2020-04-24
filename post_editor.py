@@ -52,6 +52,11 @@ class Post:
         """
         if self.session.headers.get('osnova-remember', False) and self.session.headers.get('osnova-remember') != 'replace_me':
             with open(file_name, 'rb') as i_f:
+                if not(extension or file_type):
+                    if file_name.endswith('mp4'):
+                        file_type = 'video/mp4'
+                    elif file_name.endswith('mp3'):
+                        extension = '/audio'
                 response = self.session.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
                 return response['result'][0]
         else:
