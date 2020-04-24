@@ -1,5 +1,6 @@
 PyQRCode==1.2.1
 requests==2.23.0
-Pillow==7.0.0
+Pillow>=7.1.1
 telegraph==1.4.0
 retry-decorator==1.1.1
+qrcode[pil]>=6.1

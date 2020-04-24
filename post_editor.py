@@ -5,9 +5,10 @@ import time
 from io import BytesIO
 from random import choice
 
-import pyqrcode
+import qrcode
 import requests
 from PIL import Image
+from PIL import ImageDraw
 
 class Post:
     """
@@ -114,12 +115,20 @@ class Post:
                 print(image)
                 continue
             print(image['data']['uuid'])
-            img = Image.new('L', (image['data']['width'], image['data']['height']), 255)
-            url = pyqrcode.create(image['data']['uuid'], version=5)
+            img = Image.new('RGBA', (image['data']['width'], image['data']['height']), (0, 0, 0, 0))
+            qr = qrcode.QRCode(
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=8,
+                border=2,
+            )
+            qr.add_data(image['data']['uuid'])
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
             buffer = BytesIO()
-            url.png(buffer, scale=6)
+            qr_img.save(buffer)
             with Image.open(buffer) as buffer_qr_img:
                 img.paste(buffer_qr_img, (0, 0))
+                ImageDraw.Draw(img).text((0, 0), 'prostagma? qr-nsfw v2', (0, 0, 0))
             img.save(f"{save_path}/{image['data']['uuid']}-png.png")
 
     def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = ''):
