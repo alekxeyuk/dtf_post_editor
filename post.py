@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     TEST_POST.add_media_block(TEST_POST.upload_from_file('anime.png'), 'Название', 'Автор', False, False, True)
     TEST_POST.add_gallery_block(TEST_POST.upload_from_folder('source'))
-    Post.generate_qr_codes(TEST_POST.upload_from_folder('source'), save_path='qr')
+    TEST_POST.generate_qr_codes(TEST_POST.upload_from_folder('source'), save_path='qr')
     TEST_POST.add_media_list(TEST_POST.upload_from_folder('qr'))
 
     TEST_POST.add_media_block(TEST_POST.alternative_upload_from_file('videoplayback.mp4', file_type="video/mp4"))
