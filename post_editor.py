@@ -296,6 +296,11 @@ class Post:
             self.generate_block('incut', {"text": text, "type": _type, "text_size": size}, cover, anchor)
         )
 
+    def add_person_block(self, image: dict = None, title: str = '', description: str = '', cover: bool = False, anchor: str = ''):
+        self.blocks.append(
+            self.generate_block('person', {'image': image, 'title': title, 'description': description}, cover, anchor)
+        )
+
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
         response = self.session.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
         response_type = response['result'][0]['type']
