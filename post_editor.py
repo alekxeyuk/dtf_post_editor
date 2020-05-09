@@ -58,7 +58,7 @@ class Post:
                         file_type = 'video/mp4'
                     elif file_name.endswith('mp3'):
                         extension = '/audio'
-                response = self.session.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name, i_f, file_type)}).json()
+                response = self.session.post(f'https://dtf.ru/andropov/upload{extension}', files={f'file_0': (file_name.split('\\')[-1], i_f, file_type)}).json()
                 return response['result'][0]
         else:
             print('Add osnova-remember and osnova-session cookies to .env')
