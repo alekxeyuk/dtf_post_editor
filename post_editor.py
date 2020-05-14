@@ -1,14 +1,13 @@
-import glob
 import json
 import string
 import time
-from io import BytesIO
+from pathlib import Path
 from random import choice
 
 import qrcode
 import requests
-from PIL import Image
-from PIL import ImageDraw
+from PIL import Image, ImageDraw
+
 
 class Post:
     """
@@ -73,8 +72,11 @@ class Post:
         upl_imgs = list()
         my_list = list()
         limit = 10
-        for extension in ('*.jfif', '*.jpeg', '*.jpg', '*.png'):
-            my_list.extend(glob.iglob(f"{folder_path}/{extension}", recursive=recursive))
+        for extension in ('*.jfif', '*.jpeg', '*.jpg', '*.png', '*.webp'):
+            if recursive:
+                my_list.extend(Path(folder_path).rglob(extension))
+            else:
+                my_list.extend(Path(folder_path).glob(extension))
 
         my_list_chunks = [my_list[i * limit:(i + 1) * limit] for i in range((len(my_list) + limit - 1) // limit)]
 
@@ -83,7 +85,7 @@ class Post:
             images = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
             upl_imgs.extend(images['result'])
 
-        return zip(map(lambda x: x.split('.')[0].split('\\')[-1], my_list), upl_imgs)
+        return zip(map(lambda x: x.name.split('.')[0], my_list), upl_imgs)
 
     @staticmethod
     def generate_block(block_type: str, block_data: dict, block_cover: bool, block_anchor: str, wrap: bool = False) -> dict:
@@ -108,7 +110,7 @@ class Post:
         """
         return f'''<a href="{link_url}">{link_text}</a>'''
 
-    def generate_qr_codes(self, items: list, save_path: str = 'qr', save_to_db: bool = True):
+    def generate_qr_codes(self, items: list, save_path: str = 'qr', save_to_db: bool = True, keep_file_name: bool = False):
         for _, image in items:
             if image['data'].get('uuid', None) is None:
                 print(image)
@@ -125,9 +127,10 @@ class Post:
             qr_img = qr.make_image(fill_color="black", back_color="white")
             background.paste(qr_img, (0, 0))
             ImageDraw.Draw(background).text((4, 0), 'prostagma? qr-nsfw v2', (0, 0, 0))
-            background.save(f"{save_path}/{image['data']['uuid']}-png.png")
+            file_name = image['data']['uuid'] if not keep_file_name else _
+            background.save(f"{save_path}/{file_name}-png.png")
             if save_to_db:
-                qr_image = self.upload_from_file(f"{save_path}/{image['data']['uuid']}-png.png")
+                qr_image = self.upload_from_file(f"{save_path}/{file_name}-png.png")
                 print(self.session.post("https://python-flask.alekxuk.now.sh/v1/qrcodes/insert", json={
                     'uuid': image['data']['uuid'],
                     'qr_uuid': qr_image['data']['uuid'],
