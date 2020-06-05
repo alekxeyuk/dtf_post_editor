@@ -3,10 +3,12 @@ import string
 import time
 from pathlib import Path
 from random import choice
+from webbrowser import open_new_tab
 
 import qrcode
 import requests
 from PIL import Image, ImageDraw
+from helpers.flat_json import flatten_json
 
 
 class Post:
@@ -29,6 +31,7 @@ class Post:
         with open('.env', 'r') as env_file:
             self.session.headers = json.load(env_file)
             self.session.headers.update({"x-this-is-csrf": "THIS IS SPARTA!"})
+            self.session.cookies.update(self.session.headers)
 
     @staticmethod
     def gen_random_line(length=8, chars=string.ascii_letters + string.digits):
@@ -319,6 +322,29 @@ class Post:
                 print(f'Not implemented type {response_type}')
         else:
             print(f'Error extracting {url}')
+
+    def save_draft(self):
+        """
+        Создает новый черновик
+        """
+        if self.session.cookies.get('osnova-remember', None):
+            draft_data = {
+                "entry[id]": "0",
+                "entry[title]": self.title,
+                "entry[subsite_id]": self.subsite_id,
+                "entry[is_published]": "false",
+                "mode": "raw"
+            }
+            for i, block in enumerate(self.blocks):
+                draft_data.update(flatten_json(block, i))
+            response = self.session.post('https://dtf.ru/writing/save', data=draft_data)
+        else:
+            response = dict(text='No osnova-remember cookie in .env file')
+        try:
+            open_new_tab(response.json().get('data', {}).get('entry', {}).get('url', ''))
+        except json.decoder.JSONDecodeError:
+            print('Ошиб очка')
+        print(response.text)
 
     def publish_post(self):
         response = self.session.post('https://api.dtf.ru/v1.8/entry/create', data={
