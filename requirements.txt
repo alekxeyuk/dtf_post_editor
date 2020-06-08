@@ -6,3 +6,4 @@ retry-decorator>=1.1.1
 qrcode[pil]>=6.1
 requests_toolbelt>=0.9.1
 clint>=0.5.1
+wxPython>=4.1.0
