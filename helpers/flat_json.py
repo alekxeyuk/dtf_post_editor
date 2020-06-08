@@ -1,5 +1,14 @@
 # -*- coding: utf8 -*-
 def flatten_json(json_dict: dict, block_i: int) -> dict:
+    """Flatten python dict
+
+    Args:
+        json_dict (dict): post blocks dict structure
+        block_i (int): block numeric id
+
+    Returns:
+        dict: flat dict
+    """
     out = {}
 
     def flatten(x: dict, name: str = '') -> None:
@@ -10,7 +19,7 @@ def flatten_json(json_dict: dict, block_i: int) -> dict:
             for i, a in enumerate(x):
                 flatten(a, name + str(i) + '~')
         else:
-            out[name[:-1]] = x
+            out[name[:-1]] = x if isinstance(x, str) else str(x).lower()
 
     flatten(json_dict)
     return {
