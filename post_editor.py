@@ -23,6 +23,7 @@ class Post:
     """
     def __init__(self, title: str = '', subsite_id: int = 132168):
         self.user_id = 74342
+        self.post_id = 0
         self.title = title
         self.blocks = []
         self.is_published = True
@@ -329,7 +330,7 @@ class Post:
         """
         if self.session.cookies.get('osnova-remember', None):
             draft_data = {
-                "entry[id]": "0",
+                "entry[id]": self.post_id,
                 "entry[title]": self.title,
                 "entry[subsite_id]": self.subsite_id,
                 "entry[is_published]": "false",
