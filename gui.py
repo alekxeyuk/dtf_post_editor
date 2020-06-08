@@ -153,8 +153,10 @@ class MyFrame(wx.Frame):
 
     def uploadComplete(self, img_list):
         test_post = Post('test', 74342)
-        print(img_list)
+        r = test_post.session.get("https://dtf.ru/auth/check?mode=raw", data={"mode": "raw"}).json()
+        test_post.subsite_id = r['data']['id']
         test_post.add_media_list(img_list, cover_count=2)
+        test_post.add_text_block('#wxPythonProstagma', anchor='wxPythonProstagma', cover=False)
         test_post.save_draft()
 
    
