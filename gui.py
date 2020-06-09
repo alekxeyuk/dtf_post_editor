@@ -1,14 +1,17 @@
-import wx
-import requests
-import mimetypes
 import json
-from requests_toolbelt.multipart.encoder import MultipartEncoderMonitor
+import sys
+from mimetypes import guess_type
+from os.path import join as os_path_join
 from pathlib import Path
 from threading import Thread
+
+import requests
+import wx
 from pubsub import pub
+from requests_toolbelt.multipart.encoder import MultipartEncoderMonitor
+
 from post_editor import Post
-import sys
-import os
+
 
 def convert_bytes(num):
     """
@@ -112,15 +115,12 @@ class DownloadThread(Thread):
         """
         Run the worker thread
         """
-        # wx.MilliSleep(50)
-        # for f in self.uploadFiles
-        # mimetypes.guess_type(path_file_to_upload)[1]
         upl_imgs = list()
         my_list_chunks = [self.uploadFiles[i * self.limit:(i + 1) * self.limit] for i in range((len(self.uploadFiles) + self.limit - 1) // self.limit)]
         for img_slice in my_list_chunks:
             m = MultipartEncoderMonitor.from_fields(
                 fields={
-                    f'file_{i}': ('filename', open(fPath, 'rb'), mimetypes.guess_type(str(fPath))[1]) for i, fPath in enumerate(img_slice)
+                    f'file_{i}': ('filename', open(fPath, 'rb'), guess_type(str(fPath))[1]) for i, fPath in enumerate(img_slice)
                 }, callback=self.my_callback
             )
             images = requests.post('https://dtf.ru/andropov/upload', data=m, headers={'Content-Type': m.content_type, "x-this-is-csrf": "THIS IS SPARTA!"}).json()
@@ -137,7 +137,7 @@ def getResourcePath(filename):
         basePath = sys._MEIPASS
     except Exception:
         basePath = ''
-    path = os.path.join(basePath, filename)
+    path = os_path_join(basePath, filename)
     print(path)
     return path
 
@@ -272,6 +272,7 @@ class MyFrame(wx.Frame):
         self.post.add_media_list(img_list, cover_count=2)
         self.post.add_text_block('#wxPythonProstagma', anchor='wxPythonProstagma', cover=False)
         self.post.save_draft()
+        self.post.blocks = list()
 
    
     def updateProgress(self, count):
