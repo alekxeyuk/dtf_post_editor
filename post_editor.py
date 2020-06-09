@@ -21,15 +21,27 @@ class Post:
 
         :int: ID подсайта для публикации
     """
-    def __init__(self, title: str = '', subsite_id: int = 132168):
-        self.user_id = 74342
+    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env'):
+        self.user_id = 0
         self.post_id = 0
         self.title = title
         self.blocks = []
         self.is_published = True
         self.subsite_id = subsite_id
+
         self.session = requests.Session()
-        with open('.env', 'r') as env_file:
+        self.update_cookies_from_file(cookies_file)
+        self.logged_in = self.check_auth()
+
+    def check_auth(self):
+        response = self.session.get("https://dtf.ru/auth/check?mode=raw", data={"mode": "raw"}).json()
+        if response['rc'] == 200:
+            self.user_id = response['data']['id']
+            return True
+        return False
+
+    def update_cookies_from_file(self, file_name: str):
+        with open(file_name, 'r') as env_file:
             self.session.headers = json.load(env_file)
             self.session.headers.update({"x-this-is-csrf": "THIS IS SPARTA!"})
             self.session.cookies.update(self.session.headers)
