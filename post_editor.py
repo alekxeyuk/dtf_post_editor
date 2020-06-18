@@ -21,7 +21,7 @@ class Post:
 
         :int: ID подсайта для публикации
     """
-    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env'):
+    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env', cookies_dict: dict = None):
         self.user_id = 0
         self.post_id = 0
         self.title = title
@@ -30,7 +30,10 @@ class Post:
         self.subsite_id = subsite_id
 
         self.session = requests.Session()
-        self.update_cookies_from_file(cookies_file)
+        if cookies_dict:
+            self.update_cookies_from_dict(cookies_dict)
+        else:
+            self.update_cookies_from_file(cookies_file)
         self.logged_in = self.check_auth()
 
     def check_auth(self):
@@ -39,6 +42,11 @@ class Post:
             self.user_id = response['data']['id']
             return True
         return False
+
+    def update_cookies_from_dict(self, cookies_dict: dict):
+        self.session.headers.update(cookies_dict)
+        self.session.headers.update({"x-this-is-csrf": "THIS IS SPARTA!"})
+        self.session.cookies.update(self.session.headers)
 
     def update_cookies_from_file(self, file_name: str):
         with open(file_name, 'r') as env_file:
@@ -359,7 +367,7 @@ class Post:
             print('Ошиб очка')
         print(response.text)
 
-    def publish_post(self):
+    def publish_post(self, ret: bool = False):
         response = self.session.post('https://api.dtf.ru/v1.8/entry/create', data={
             "user_id": self.user_id,
             "title": self.title,
@@ -370,4 +378,7 @@ class Post:
             "is_published": self.is_published,
             "subsite_id": self.subsite_id
         })
-        print(response.text)
+        if ret:
+            return response.json()
+        else:
+            print(response.text)
