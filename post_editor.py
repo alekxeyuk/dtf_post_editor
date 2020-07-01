@@ -8,7 +8,10 @@ from webbrowser import open_new_tab
 import qrcode
 import requests
 from PIL import Image, ImageDraw
-from helpers.flat_json import flatten_json
+try:
+    from .helpers.flat_json import flatten_json
+except ImportError:
+    from helpers.flat_json import flatten_json
 
 
 class Post:
@@ -300,6 +303,14 @@ class Post:
         """
         self.blocks.append(
             self.generate_block('rawhtml', {"raw": raw}, cover, anchor)
+        )
+
+    def add_wtrfall_block(self, wtrfallid: str, cover: bool = False, anchor: str = ''):
+        """
+            Нужно разрешение редакции на использование этого блока
+        """
+        self.blocks.append( 
+            self.generate_block('wtrfall', {"wtrfallid": wtrfallid}, cover, anchor)
         )
 
     def add_quote_block(self, text: str, subline1: str = '', subline2: str = '', _type: str = 'default', size: str = 'small', image: dict = None, cover: bool = False, anchor: str = ''):
