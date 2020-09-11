@@ -261,7 +261,7 @@ class Post:
             self.generate_block('quiz', {"uid": self.gen_random_line(29), "hash": self.gen_random_line(16), "title": title, "items": {f'a{int(time.time())}{x}': item for x, item in enumerate(items)}, "is_public": is_public, 'is_just_created': True}, cover, anchor)
         )
 
-    def add_audio_block(self, audio_dict: dict, image_dict: dict = None, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
+    def add_audio_block(self, audio_dict: dict, image_dict: dict = {}, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
         self.blocks.append(
             self.generate_block('audio', {"title": title, "hash": _hash or self.gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor)
         )
@@ -379,7 +379,7 @@ class Post:
         print(response.text)
 
     def publish_post(self, ret: bool = False):
-        response = self.session.post('https://api.dtf.ru/v1.8/entry/create', data={
+        response = self.session.post('https://api.dtf.ru/v1.9/entry/create', data={
             "user_id": self.user_id,
             "title": self.title,
             "entry": json.dumps({
