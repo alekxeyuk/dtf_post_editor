@@ -24,7 +24,7 @@ class Post:
 
         :int: ID подсайта для публикации
     """
-    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env', cookies_dict: dict = None):
+    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env', cookies_dict: dict = None, api_v: str = '1.9'):
         self.user_id = 0
         self.post_id = 0
         self.title = title
@@ -32,6 +32,7 @@ class Post:
         self.is_published = True
         self.subsite_id = subsite_id
 
+        self.api_v = api_v
         self.session = requests.Session()
         if cookies_dict:
             self.update_cookies_from_dict(cookies_dict)
@@ -61,16 +62,14 @@ class Post:
     def gen_random_line(length=8, chars=string.ascii_letters + string.digits):
         return ''.join([choice(chars) for i in range(length)])
 
-    # @staticmethod
     def upload_from_file(self, file_name: str):
         """
             Загрузить файл с диска, путь относительный
         """
         with open(file_name, 'rb') as i_f:
-            response = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_0': i_f}).json()
+            response = self.session.post(f'https://api.dtf.ru/v{self.api_v}/uploader/upload', files={f'file_0': i_f}).json()
             return response['result'][0]
 
-    # @staticmethod
     def alternative_upload_from_file(self, file_name: str, extension: str = '', file_type: str = ''):
         """
             - Загрузить файл с диска, путь относительный
@@ -90,7 +89,6 @@ class Post:
             print('Add osnova-remember and osnova-session cookies to .env')
             return {}
 
-    # @staticmethod
     def upload_from_folder(self, folder_path: str, recursive: bool = False):
         """
             - Загрузить все файлы из папки, путь относительный/абсолютный
@@ -109,7 +107,7 @@ class Post:
 
         for _, img_slice in enumerate(my_list_chunks):
             print(f'{_}/{len(my_list_chunks)}')
-            images = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
+            images = self.session.post(f'https://api.dtf.ru/v{self.api_v}/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
             upl_imgs.extend(images['result'])
 
         return zip(map(lambda x: x.name.split('.')[0], my_list), upl_imgs)
@@ -379,7 +377,7 @@ class Post:
         print(response.text)
 
     def publish_post(self, ret: bool = False):
-        response = self.session.post('https://api.dtf.ru/v1.9/entry/create', data={
+        response = self.session.post(f'https://api.dtf.ru/v{self.api_v}/entry/create', data={
             "user_id": self.user_id,
             "title": self.title,
             "entry": json.dumps({
