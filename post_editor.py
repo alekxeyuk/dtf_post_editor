@@ -385,9 +385,14 @@ class Post:
     def load_draft(self, draft_id: int, only_blocks: bool = True):
         """
         Загрузить структуру уже существующего черновика
+        
+        1. draft_id:
+            - -1 -> последний черновик
+            - 0  -> выбор из последних черновиков
         """
-        if draft_id == -1:
-            draft_id = self.choose_draft(True)
+        if draft_id in (-1, 0):
+            draft_id = self.choose_draft(bool(draft_id))
+
         html = self.session.get(f'https://dtf.ru/writing/{draft_id}?mode=ajax').json()['module.ajaxify']
         if error := html.get('error', None):
             print(error)
