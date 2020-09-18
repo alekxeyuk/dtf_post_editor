@@ -8,6 +8,7 @@ from webbrowser import open_new_tab
 import qrcode
 import requests
 from PIL import Image, ImageDraw
+from bs4 import BeautifulSoup
 try:
     from .helpers.flat_json import flatten_json
 except ImportError:
@@ -44,6 +45,7 @@ class Post:
         response = self.session.get("https://dtf.ru/auth/check?mode=raw", data={"mode": "raw"}).json()
         if response['rc'] == 200:
             self.user_id = response['data']['id']
+            self.user_name = response['data']['name']
             return True
         return False
 
@@ -353,13 +355,58 @@ class Post:
         else:
             print(f'Error extracting {url}')
 
-    def load_draft(self, draft_id: int):
+    def choose_draft(self, first: bool = False) -> int:
+        """
+        Выбор одного из 12 последних черновиков
+        """
+        drafts = dict()
+        drafts_json = self.session.get(f'https://dtf.ru/u/{self.user_id}/drafts/more?last_id=1&mode=raw').json()
+        bs = BeautifulSoup(drafts_json['data']['items_html'], 'lxml')
+        for x, i in enumerate(bs.find_all(attrs={'class': 'feed__item l-island-round'}), start=1):
+            post_id = i.div.get('data-content-id')
+            post_to = i.find(attrs={'class': 'content-header-author__name'}).text.strip()
+            if post_to == self.user_name:
+                post_to = 'В блог'
+            post_title = i.find(attrs={'class': 'content-header__title l-island-a'})
+            if post_title:
+                post_title = post_title.text.strip()
+            else:
+                post_title = 'Без заголовка'
+            print(f"[{x}]", post_id, ',', post_to, ',', post_title)
+            drafts.update({x: dict(post_id=post_id, post_to=post_to, post_title=post_title)})
+        if first:
+            return drafts.get(1).get('post_id')
+        else:
+            while post_choice := input('Choose one of the drafts, enter to exit :> '):
+                if post_choice.isdigit() and (post_choice := int(post_choice)) in range(1, 13):
+                    return drafts.get(post_choice).get('post_id')
+
+
+    def load_draft(self, draft_id: int, only_blocks: bool = True):
         """
         Загрузить структуру уже существующего черновика
         """
-        # TODO: написать метод загрузки черновика из профиля. Возможность загрузки не по id, а последнего (id=-1).
-        # Insert-ить новые блоки в загруженную структуру, поиск по черновикам с пагинацей cli-gui  
-        pass
+        if draft_id == -1:
+            draft_id = self.choose_draft(True)
+        html = self.session.get(f'https://dtf.ru/writing/{draft_id}?mode=ajax').json()['module.ajaxify']
+        if error := html.get('error', None):
+            print(error)
+        else:
+            soup = BeautifulSoup(html['html'], 'lxml')
+            entry = json.loads(soup.find('textarea').text)['entry']
+            if not only_blocks:
+                self.post_id = entry['id']
+                self.title = entry['title']
+                self.subsite_id = entry['subsite_id']
+            self.blocks.extend(entry['entry']['blocks'])
+            print('post extended with', len(entry['entry']['blocks']), 'blocks')
+
+
+    def fix_block(self, block: dict) -> dict:
+        if block['type'] == 'audio':
+            if block['data']['image'] == None:
+                block['data']['image'] = dict()
+        return block
 
     def save_draft(self):
         """
@@ -374,7 +421,7 @@ class Post:
                 "mode": "raw"
             }
             for i, block in enumerate(self.blocks):
-                draft_data.update(flatten_json(block, i))
+                draft_data.update(flatten_json(self.fix_block(block), i))
             response = self.session.post('https://dtf.ru/writing/save', data=draft_data)
         else:
             response = dict(text='No osnova-remember cookie in .env file')
