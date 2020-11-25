@@ -340,7 +340,7 @@ class Post:
         )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
-        response = self.session.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
+        response = self.session.get(f'https://dtf.ru/andropov/extract?url={url}').json()
         response_type = response['result'][0]['type']
         if response_type != 'error':
             print(response_type)
@@ -349,6 +349,11 @@ class Post:
             elif response_type in ('link', 'video'):
                 self.blocks.append(
                     self.generate_block(response_type, response['result'][0], cover, anchor, True)
+                )
+            elif response_type == 'universalbox':
+                box_service = response['result'][0]['data']['service']
+                self.blocks.append(
+                    self.generate_block(box_service, response['result'][0], cover, anchor, True)
                 )
             else:
                 print(f'Not implemented type {response_type}')
@@ -413,7 +418,7 @@ class Post:
                 block['data']['image'] = dict()
         return block
 
-    def save_draft(self):
+    def save_draft(self, debug: bool = False):
         """
         Создает новый черновик
         """
@@ -434,7 +439,7 @@ class Post:
             open_new_tab(response.json().get('data', {}).get('entry', {}).get('url', ''))
         except json.decoder.JSONDecodeError:
             print('Ошиб очка')
-        print(response.text)
+        print(response.text if debug else 'OK')
 
     def publish_post(self, ret: bool = False):
         response = self.session.post(f'https://api.dtf.ru/v{self.api_v}/entry/create', data={
