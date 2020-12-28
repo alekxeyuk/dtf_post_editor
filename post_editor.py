@@ -5,6 +5,7 @@ from pathlib import Path
 from random import choice
 from webbrowser import open_new_tab
 
+import qrcode
 import requests
 from PIL import Image, ImageDraw
 from bs4 import BeautifulSoup
@@ -137,7 +138,6 @@ class Post:
         return f'''<a href="{link_url}">{link_text}</a>'''
 
     def generate_qr_codes(self, items: list, save_path: str = 'qr', save_to_db: bool = True, keep_file_name: bool = False):
-        raise NotImplementedError('This whole method is outdated, will be rewritten later.')
         for _, image in items:
             if image['data'].get('uuid', None) is None:
                 print(image)
