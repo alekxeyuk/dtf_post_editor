@@ -39,7 +39,7 @@ def create_upload(urls):
     total_size = []
 
     def form(total_size, url):
-        r = requests.head(url)
+        r = requests.head(url, allow_redirects=True)
         total_size.append(int(r.headers.get('content-length')))
         return ('filename', file_iterator(url), r.headers.get('content-type'))
 

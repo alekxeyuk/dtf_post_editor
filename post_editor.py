@@ -8,6 +8,7 @@ from webbrowser import open_new_tab
 import qrcode
 import requests
 from PIL import Image, ImageDraw
+from bs4 import BeautifulSoup
 try:
     from .helpers.flat_json import flatten_json
 except ImportError:
@@ -24,7 +25,7 @@ class Post:
 
         :int: ID подсайта для публикации
     """
-    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env', cookies_dict: dict = None):
+    def __init__(self, title: str = '', subsite_id: int = 132168, cookies_file: str = '.env', cookies_dict: dict = None, api_v: str = '1.9'):
         self.user_id = 0
         self.post_id = 0
         self.title = title
@@ -32,6 +33,7 @@ class Post:
         self.is_published = True
         self.subsite_id = subsite_id
 
+        self.api_v = api_v
         self.session = requests.Session()
         if cookies_dict:
             self.update_cookies_from_dict(cookies_dict)
@@ -43,6 +45,7 @@ class Post:
         response = self.session.get("https://dtf.ru/auth/check?mode=raw", data={"mode": "raw"}).json()
         if response['rc'] == 200:
             self.user_id = response['data']['id']
+            self.user_name = response['data']['name']
             return True
         return False
 
@@ -61,16 +64,14 @@ class Post:
     def gen_random_line(length=8, chars=string.ascii_letters + string.digits):
         return ''.join([choice(chars) for i in range(length)])
 
-    # @staticmethod
     def upload_from_file(self, file_name: str):
         """
             Загрузить файл с диска, путь относительный
         """
         with open(file_name, 'rb') as i_f:
-            response = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_0': i_f}).json()
+            response = self.session.post(f'https://api.dtf.ru/v{self.api_v}/uploader/upload', files={f'file_0': i_f}).json()
             return response['result'][0]
 
-    # @staticmethod
     def alternative_upload_from_file(self, file_name: str, extension: str = '', file_type: str = ''):
         """
             - Загрузить файл с диска, путь относительный
@@ -90,7 +91,6 @@ class Post:
             print('Add osnova-remember and osnova-session cookies to .env')
             return {}
 
-    # @staticmethod
     def upload_from_folder(self, folder_path: str, recursive: bool = False):
         """
             - Загрузить все файлы из папки, путь относительный/абсолютный
@@ -109,7 +109,7 @@ class Post:
 
         for _, img_slice in enumerate(my_list_chunks):
             print(f'{_}/{len(my_list_chunks)}')
-            images = self.session.post('https://api.dtf.ru/v1.8/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
+            images = self.session.post(f'https://api.dtf.ru/v{self.api_v}/uploader/upload', files={f'file_{i}': (self.gen_random_line(), open(x, 'rb')) for i, x in enumerate(img_slice)}).json()
             upl_imgs.extend(images['result'])
 
         return zip(map(lambda x: x.name.split('.')[0], my_list), upl_imgs)
@@ -261,7 +261,7 @@ class Post:
             self.generate_block('quiz', {"uid": self.gen_random_line(29), "hash": self.gen_random_line(16), "title": title, "items": {f'a{int(time.time())}{x}': item for x, item in enumerate(items)}, "is_public": is_public, 'is_just_created': True}, cover, anchor)
         )
 
-    def add_audio_block(self, audio_dict: dict, image_dict: dict = None, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
+    def add_audio_block(self, audio_dict: dict, image_dict: dict = {}, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
         self.blocks.append(
             self.generate_block('audio', {"title": title, "hash": _hash or self.gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor)
         )
@@ -340,7 +340,7 @@ class Post:
         )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
-        response = self.session.get(f'https://dtf.ru/andropov/extract/render?url={url}').json()
+        response = self.session.get(f'https://dtf.ru/andropov/extract?url={url}').json()
         response_type = response['result'][0]['type']
         if response_type != 'error':
             print(response_type)
@@ -350,12 +350,75 @@ class Post:
                 self.blocks.append(
                     self.generate_block(response_type, response['result'][0], cover, anchor, True)
                 )
+            elif response_type == 'universalbox':
+                box_service = response['result'][0]['data']['service']
+                self.blocks.append(
+                    self.generate_block(box_service, response['result'][0], cover, anchor, True)
+                )
             else:
                 print(f'Not implemented type {response_type}')
         else:
             print(f'Error extracting {url}')
 
-    def save_draft(self):
+    def choose_draft(self, first: bool = False) -> int:
+        """
+        Выбор одного из 12 последних черновиков
+        """
+        drafts = dict()
+        drafts_json = self.session.get(f'https://dtf.ru/u/{self.user_id}/drafts/more?last_id=1&mode=raw').json()
+        bs = BeautifulSoup(drafts_json['data']['items_html'], 'lxml')
+        for x, i in enumerate(bs.find_all(attrs={'class': 'feed__item l-island-round'}), start=1):
+            post_id = i.div.get('data-content-id')
+            post_to = i.find(attrs={'class': 'content-header-author__name'}).text.strip()
+            if post_to == self.user_name:
+                post_to = 'В блог'
+            post_title = i.find(attrs={'class': 'content-header__title l-island-a'})
+            if post_title:
+                post_title = post_title.text.strip()
+            else:
+                post_title = 'Без заголовка'
+            print(f"[{x}]", post_id, ',', post_to, ',', post_title)
+            drafts.update({x: dict(post_id=post_id, post_to=post_to, post_title=post_title)})
+        if first:
+            return drafts.get(1).get('post_id')
+        else:
+            while post_choice := input('Choose one of the drafts, enter to exit :> '):
+                if post_choice.isdigit() and (post_choice := int(post_choice)) in range(1, 13):
+                    return drafts.get(post_choice).get('post_id')
+
+
+    def load_draft(self, draft_id: int, only_blocks: bool = True):
+        """
+        Загрузить структуру уже существующего черновика
+        
+        1. draft_id:
+            - -1 -> последний черновик
+            - 0  -> выбор из последних черновиков
+        """
+        if draft_id in (-1, 0):
+            draft_id = self.choose_draft(bool(draft_id))
+
+        html = self.session.get(f'https://dtf.ru/writing/{draft_id}?mode=ajax').json()['module.ajaxify']
+        if error := html.get('error', None):
+            print(error)
+        else:
+            soup = BeautifulSoup(html['html'], 'lxml')
+            entry = json.loads(soup.find('textarea').text)['entry']
+            if not only_blocks:
+                self.post_id = entry['id']
+                self.title = entry['title']
+                self.subsite_id = entry['subsite_id']
+            self.blocks.extend(entry['entry']['blocks'])
+            print('post extended with', len(entry['entry']['blocks']), 'blocks')
+
+
+    def fix_block(self, block: dict) -> dict:
+        if block['type'] == 'audio':
+            if block['data']['image'] == None:
+                block['data']['image'] = dict()
+        return block
+
+    def save_draft(self, debug: bool = False):
         """
         Создает новый черновик
         """
@@ -368,7 +431,7 @@ class Post:
                 "mode": "raw"
             }
             for i, block in enumerate(self.blocks):
-                draft_data.update(flatten_json(block, i))
+                draft_data.update(flatten_json(self.fix_block(block), i))
             response = self.session.post('https://dtf.ru/writing/save', data=draft_data)
         else:
             response = dict(text='No osnova-remember cookie in .env file')
@@ -376,10 +439,10 @@ class Post:
             open_new_tab(response.json().get('data', {}).get('entry', {}).get('url', ''))
         except json.decoder.JSONDecodeError:
             print('Ошиб очка')
-        print(response.text)
+        print(response.text if debug else 'OK')
 
     def publish_post(self, ret: bool = False):
-        response = self.session.post('https://api.dtf.ru/v1.8/entry/create', data={
+        response = self.session.post(f'https://api.dtf.ru/v{self.api_v}/entry/create', data={
             "user_id": self.user_id,
             "title": self.title,
             "entry": json.dumps({

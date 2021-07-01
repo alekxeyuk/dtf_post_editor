@@ -7,3 +7,4 @@ requests_toolbelt>=0.9.1
 clint>=0.5.1
 wxPython>=4.1.0
 pypubsub>=4.0.3
+beautifulsoup4>=4.9.1
