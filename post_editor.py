@@ -115,7 +115,7 @@ class Post:
         return zip(map(lambda x: x.name.split('.')[0], my_list), upl_imgs)
 
     @staticmethod
-    def generate_block(block_type: str, block_data: dict, block_cover: bool, block_anchor: str, wrap: bool = False) -> dict:
+    def generate_block(block_type: str, block_data: dict, block_cover: bool, block_anchor: str, wrap: bool = False, DBLwrap: bool = False) -> dict:
         """
             Args:
                 - block_type
@@ -123,9 +123,14 @@ class Post:
                 - block_cover
                 - block_anchor
         """
+        data = block_data
+        if wrap:
+            data = {block_type: block_data}
+        elif DBLwrap:
+            data = {block_type: {'type': block_type, 'data': block_data}}
         return {
             'type': block_type,
-            'data': {block_type: block_data} if wrap else block_data,
+            'data': data,
             'cover': block_cover,
             'anchor': block_anchor
         }
@@ -338,6 +343,11 @@ class Post:
         self.blocks.append(
             self.generate_block('person', {'image': image, 'title': title, 'description': description}, cover, anchor)
         )
+        
+    def add_embed_block(self, original_id: int, cover: bool = False, anchor: str = ''):
+        self.blocks.append(
+            self.generate_block('osnovaEmbed', {'original_id': original_id}, cover, anchor, DBLwrap = True)
+        )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):
         response = self.session.get(f'https://dtf.ru/andropov/extract?url={url}').json()
@@ -424,14 +434,17 @@ class Post:
         """
         if self.session.cookies.get('osnova-remember', None):
             draft_data = {
-                "entry[id]": self.post_id,
-                "entry[title]": self.title,
-                "entry[subsite_id]": self.subsite_id,
-                "entry[is_published]": "false",
+                "entry": json.dumps({
+                    "id": self.post_id,
+                    "title": self.title,
+                    "subsite_id": self.subsite_id,
+                    "is_published": False,
+                    "entry": {
+                        "blocks": self.blocks
+                    }
+                }),
                 "mode": "raw"
             }
-            for i, block in enumerate(self.blocks):
-                draft_data.update(flatten_json(self.fix_block(block), i))
             response = self.session.post('https://dtf.ru/writing/save', data=draft_data)
         else:
             response = dict(text='No osnova-remember cookie in .env file')
