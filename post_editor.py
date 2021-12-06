@@ -385,7 +385,7 @@ class Post:
             post_to = i.find(attrs={'class': 'content-header-author__name'}).text.strip()
             if post_to == self.user_name:
                 post_to = 'В блог'
-            post_title = i.find(attrs={'class': 'content-header__title l-island-a'})
+            post_title = i.find(attrs={'class': 'content-title content-title--short l-island-a'})
             if post_title:
                 post_title = post_title.text.strip()
             else:
@@ -411,12 +411,11 @@ class Post:
         if draft_id in (-1, 0):
             draft_id = self.choose_draft(bool(draft_id))
 
-        html = self.session.get(f'https://dtf.ru/writing/{draft_id}?mode=ajax').json()['module.ajaxify']
-        if error := html.get('error', None):
-            print(error)
+        editorData = self.session.get(f'https://dtf.ru/writing/{draft_id}/editorData?mode=raw').json()
+        if editorData['rc'] != 200:
+            print(editorData)
         else:
-            soup = BeautifulSoup(html['html'], 'lxml')
-            entry = json.loads(soup.find('textarea').text)['entry']
+            entry = editorData['data']['entry']
             if not only_blocks:
                 self.post_id = entry['id']
                 self.title = entry['title']
