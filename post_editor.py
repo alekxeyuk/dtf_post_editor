@@ -115,13 +115,16 @@ class Post:
         return zip(map(lambda x: x.name.split('.')[0], my_list), upl_imgs)
 
     @staticmethod
-    def generate_block(block_type: str, block_data: dict, block_cover: bool, block_anchor: str, wrap: bool = False, DBLwrap: bool = False) -> dict:
+    def generate_block(block_type: str, block_data: dict, block_cover: bool, block_anchor: str, wrap: bool = False, DBLwrap: bool = False, **kwargs) -> dict:
         """
             Args:
                 - block_type
                 - block_data
                 - block_cover
                 - block_anchor
+                - wrap
+                - DBLwrap
+                - hidden
         """
         data = block_data
         if wrap:
@@ -133,7 +136,7 @@ class Post:
             'data': data,
             'cover': block_cover,
             'anchor': block_anchor
-        }
+        } | kwargs
 
     @staticmethod
     def generate_link(link_text: str, link_url: str) -> str:
@@ -170,7 +173,7 @@ class Post:
                     'entry_data': {'type': image.get('type'), 'file_type': image.get('data').get('type')}
                 }).json())
 
-    def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = ''):
+    def add_text_block(self, text: str = 'Пустой блок текста', cover: bool = False, anchor: str = '', **kwargs):
         """
             :str: Текст блока
 
@@ -179,10 +182,10 @@ class Post:
             :str: Якорь
         """
         self.blocks.append(
-            self.generate_block('text', {'text': text}, cover, anchor)
+            self.generate_block('text', {'text': text}, cover, anchor, **kwargs)
         )
 
-    def add_header_block(self, text: str = 'Заголовок', size: int = 2, cover: bool = False, anchor: str = ''):
+    def add_header_block(self, text: str = 'Заголовок', size: int = 2, cover: bool = False, anchor: str = '', **kwargs):
         """
             :str: Текст заголовка
 
@@ -194,7 +197,7 @@ class Post:
         """
         style = f'h{max(min(size, 4), 2)}'
         self.blocks.append(
-            self.generate_block('header', {'text': text, 'style': style}, cover, anchor)
+            self.generate_block('header', {'text': text, 'style': style}, cover, anchor, **kwargs)
         )
 
     def add_media_list(self, items: list, cover_count: int = 0, auto_back: bool = True, imp_back: bool = False, add_anchor: bool = True):
@@ -220,7 +223,7 @@ class Post:
             counter += 1
 
 
-    def add_media_block(self, item: dict, title: str = '', author: str = '', background: bool = True, border: bool = False, cover: bool = False, anchor: str = ''):
+    def add_media_block(self, item: dict, title: str = '', author: str = '', background: bool = True, border: bool = False, cover: bool = False, anchor: str = '', **kwargs):
         """
             :dict: Cловарь с данными загруженного изображения
 
@@ -237,15 +240,15 @@ class Post:
             :str: Якорь
         """
         self.blocks.append(
-            self.generate_block('media', {'items': [{"title": title, "author": author, "image": item}], 'with_background': background, 'with_border': border}, cover, anchor)
+            self.generate_block('media', {'items': [{"title": title, "author": author, "image": item}], 'with_background': background, 'with_border': border}, cover, anchor, **kwargs)
         )
 
-    def add_gallery_block(self, images: list, cover: bool = False, anchor: str = ''):
+    def add_gallery_block(self, images: list, cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('media', {'items': [{"title": '', "author": '', "image": image[1] if isinstance(image, tuple) else image} for image in images], 'with_background': False, 'with_border': False}, cover, anchor)
+            self.generate_block('media', {'items': [{"title": '', "author": '', "image": image[1] if isinstance(image, tuple) else image} for image in images], 'with_background': False, 'with_border': False}, cover, anchor, **kwargs)
         )
 
-    def add_number_block(self, number: str = '', title: str = '', cover: bool = False, anchor: str = ''):
+    def add_number_block(self, number: str = '', title: str = '', cover: bool = False, anchor: str = '', **kwargs):
         """
             - :str: Число
             - :str: Описание числа
@@ -253,72 +256,72 @@ class Post:
             - :str: Якорь
         """
         self.blocks.append(
-            self.generate_block('number', {"number": number, "title": title}, cover, anchor)
+            self.generate_block('number', {"number": number, "title": title}, cover, anchor, **kwargs)
         )
 
-    def add_quiz_block(self, items: list, title: str = '', is_public: bool = False, cover: bool = False, anchor: str = ''):
+    def add_quiz_block(self, items: list, title: str = '', is_public: bool = False, cover: bool = False, anchor: str = '', **kwargs):
         """
         - Варианты ответа
         - Название
         - Публичность опроса
         """
         self.blocks.append(
-            self.generate_block('quiz', {"uid": self.gen_random_line(29), "hash": self.gen_random_line(16), "title": title, "items": {f'a{int(time.time())}{x}': item for x, item in enumerate(items)}, "is_public": is_public, 'is_just_created': True}, cover, anchor)
+            self.generate_block('quiz', {"uid": self.gen_random_line(29), "hash": self.gen_random_line(16), "title": title, "items": {f'a{int(time.time())}{x}': item for x, item in enumerate(items)}, "is_public": is_public, 'is_just_created': True}, cover, anchor, **kwargs)
         )
 
-    def add_audio_block(self, audio_dict: dict, image_dict: dict = {}, title: str = '', _hash: str = '', cover: bool = False, anchor: str = ''):
+    def add_audio_block(self, audio_dict: dict, image_dict: dict = {}, title: str = '', _hash: str = '', cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('audio', {"title": title, "hash": _hash or self.gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor)
+            self.generate_block('audio', {"title": title, "hash": _hash or self.gen_random_line(), "image": image_dict, "audio": audio_dict}, cover, anchor, **kwargs)
         )
 
-    def add_delimiter_block(self, _type: str = 'default', cover: bool = False, anchor: str = ''):
+    def add_delimiter_block(self, _type: str = 'default', cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('delimiter', {"type": _type}, cover, anchor)
+            self.generate_block('delimiter', {"type": _type}, cover, anchor, **kwargs)
         )
 
-    def add_code_block(self, text: str = '', lang: str = '', cover: bool = False, anchor: str = ''):
+    def add_code_block(self, text: str = '', lang: str = '', cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('code', {"text": text, 'lang': lang}, cover, anchor)
+            self.generate_block('code', {"text": text, 'lang': lang}, cover, anchor, **kwargs)
         )
 
-    def add_list_block(self, items: list, _type: str = 'UL', cover: bool = False, anchor: str = ''):
+    def add_list_block(self, items: list, _type: str = 'UL', cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('list', {"items": items, 'type': _type}, cover, anchor)
+            self.generate_block('list', {"items": items, 'type': _type}, cover, anchor, **kwargs)
         )
 
-    def add_warning_block(self, title: str, text: str, cover: bool = False, anchor: str = ''):
+    def add_warning_block(self, title: str, text: str, cover: bool = False, anchor: str = '', **kwargs):
         """
             Нужно разрешение редакции на использование этого блока
         """
         self.blocks.append(
-            self.generate_block('warning', {"title": title, "text": text}, cover, anchor)
+            self.generate_block('warning', {"title": title, "text": text}, cover, anchor, **kwargs)
         )
 
-    def add_special_button(self, url: str, text: str = 'Перейти к посту', text_color: str = "#000000", background_color: str = "#d9f5ff", cover: bool = False, anchor: str = ''):
+    def add_special_button(self, url: str, text: str = 'Перейти к посту', text_color: str = "#000000", background_color: str = "#d9f5ff", cover: bool = False, anchor: str = '', **kwargs):
         """
             Нужно разрешение редакции на использование этого блока
         """
         self.blocks.append(
-            self.generate_block('special_button', {"text": text, "textColor": text_color, "backgroundColor": background_color, "url": url}, cover, anchor)
+            self.generate_block('special_button', {"text": text, "textColor": text_color, "backgroundColor": background_color, "url": url}, cover, anchor, **kwargs)
         )
 
-    def add_rawhtml_block(self, raw: str, cover: bool = False, anchor: str = ''):
+    def add_rawhtml_block(self, raw: str, cover: bool = False, anchor: str = '', **kwargs):
         """
             Нужно разрешение редакции на использование этого блока
         """
         self.blocks.append(
-            self.generate_block('rawhtml', {"raw": raw}, cover, anchor)
+            self.generate_block('rawhtml', {"raw": raw}, cover, anchor, **kwargs)
         )
 
-    def add_wtrfall_block(self, wtrfallid: str, cover: bool = False, anchor: str = ''):
+    def add_wtrfall_block(self, wtrfallid: str, cover: bool = False, anchor: str = '', **kwargs):
         """
             Нужно разрешение редакции на использование этого блока
         """
         self.blocks.append( 
-            self.generate_block('wtrfall', {"wtrfallid": wtrfallid}, cover, anchor)
+            self.generate_block('wtrfall', {"wtrfallid": wtrfallid}, cover, anchor, **kwargs)
         )
 
-    def add_quote_block(self, text: str, subline1: str = '', subline2: str = '', _type: str = 'default', size: str = 'small', image: dict = None, cover: bool = False, anchor: str = ''):
+    def add_quote_block(self, text: str, subline1: str = '', subline2: str = '', _type: str = 'default', size: str = 'small', image: dict = None, cover: bool = False, anchor: str = '', **kwargs):
         """
             - subline1 = Имя
             - subline2 = Должность
@@ -326,27 +329,27 @@ class Post:
             - size = small / big
         """
         self.blocks.append(
-            self.generate_block('quote', {"text": text, "subline1": subline1, "subline2": subline2, "type": _type, "text_size": size, "image": image}, cover, anchor)
+            self.generate_block('quote', {"text": text, "subline1": subline1, "subline2": subline2, "type": _type, "text_size": size, "image": image}, cover, anchor, **kwargs)
         )
 
-    def add_incut_block(self, text: str, _type: str = 'centered', size: str = 'big', cover: bool = False, anchor: str = ''):
+    def add_incut_block(self, text: str, _type: str = 'centered', size: str = 'big', cover: bool = False, anchor: str = '', **kwargs):
         """
             - text = not/formated text
             - type = left / centered
             - size = small / big
         """
         self.blocks.append(
-            self.generate_block('incut', {"text": text, "type": _type, "text_size": size}, cover, anchor)
+            self.generate_block('incut', {"text": text, "type": _type, "text_size": size}, cover, anchor, **kwargs)
         )
 
-    def add_person_block(self, image: dict = None, title: str = '', description: str = '', cover: bool = False, anchor: str = ''):
+    def add_person_block(self, image: dict = None, title: str = '', description: str = '', cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('person', {'image': image, 'title': title, 'description': description}, cover, anchor)
+            self.generate_block('person', {'image': image, 'title': title, 'description': description}, cover, anchor, **kwargs)
         )
         
-    def add_embed_block(self, original_id: int, cover: bool = False, anchor: str = ''):
+    def add_embed_block(self, original_id: int, cover: bool = False, anchor: str = '', **kwargs):
         self.blocks.append(
-            self.generate_block('osnovaEmbed', {'original_id': original_id}, cover, anchor, DBLwrap = True)
+            self.generate_block('osnovaEmbed', {'original_id': original_id}, cover, anchor, DBLwrap = True, **kwargs)
         )
 
     def extract_link(self, url: str, cover: bool = False, anchor: str = ''):

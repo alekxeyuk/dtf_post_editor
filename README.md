@@ -6,7 +6,7 @@
  [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alekxeyuk/dtf_post_editor) 
 
 ## Dependencies
-- `Python 3.7` or higher
+- `Python 3.9` or higher
 - `requests` [requests](https://github.com/kennethreitz/requests)
 - `pillow` [pillow](https://github.com/python-pillow/Pillow)
 - `pyqrcode` [pyqrcode](https://github.com/mnooner256/pyqrcode)
